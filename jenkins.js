@@ -781,22 +781,78 @@ const input = [
     "FBFBFBFLRR",
     "BFBFFFFRLL",
   ];
- function xyxyxy(array){
-    array.forEach((a) => {
-        const rp = a.slice(0,7)
-        const rp2 = a.slice(7)
-        let rmax = 127
-        let rmin = 0
-        let colmax = 7
-        let colmin = 0
+ function xyxyxy(input){
 
+    let minSquare = Number.MAX_SAFE_INTEGER
+    let maxSquare = Number.MIN_SAFE_INTEGER
 
+        input.forEach(x => {
+            let row = parseInt(x.slice(0,7).replace(/F/g, '0').replace(/B/g, '1'), 2);
+            let col = parseInt(x.slice(7).replace(/L/g, '0').replace(/R/g, '1'), 2);
+            let square = (row * 8) + col;
 
-        if(x == 'F') {
-            return rmax.floor(rmax + rmin/2)
-        }
-        else if(x == 'B'){
-            return rmin.ciel(rmax + rmin/2)
-        }
-    })
-} 
+            minSquare = Math.min(minSquare, square);
+            maxSquare = Math.max(maxSquare, square);
+        });
+
+        return {minSquare, maxSquare};
+    }
+
+    const  { minSquare, maxSquare} = xyxyxy(input);
+    console.log(`lowest square: ${minSquare}, highest square:${maxSquare}`);
+
+function missing(minSquare, maxSquare, input){
+    const allsquare = new Set(
+        input.map(x =>{
+            let row = parseInt(x.slice(0,7).replace(/F/g, '0').replace(/B/g, '1'), 2);
+            let col = parseInt(x.slice(7).replace(/L/g, '0').replace(/R/g, '1'), 2);
+            return (row * 8) + col;
+        })
+    )
+
+    return Array.from({ length: maxSquare - minSquare + 1}, (_, i) => minSquare + i).filter(square => !allsquare.has(square));
+}
+
+const missingSquares = missing(minSquare, maxSquare, input);
+console.log(`missing square: ${missingSquares}`);
+
+function back(square){
+    const row = square >> 3;
+    const col = square & 7;
+
+    const rowx = row.toString(2).padStart(7, '0').replace(/0/g, 'F').replace(/1/g, 'B');
+    const colx = col.toString(2).padStart(3, '0').replace(/0/g, 'L').replace(/1/g, 'R');
+
+    return rowx + colx;
+}
+const found = missingSquares[0]
+const x = back(found);
+console.log(`it is ${found}: ${x}`)
+
+function safe(input){
+    const [rsum, csum] = input.reduce(([ysum, xsum], code )=> {
+        const row = parseInt(code.slice(0, 7).replace(/F/g, '0').replace(/B/g, '1'), 2)
+        const col = parseInt(code.slice(7).replace(/L/g, '0').replace(/R/g, '1'), 2)
+        return [ysum + row, xsum + col];
+    }, [0, 0]);
+
+    const code = `${rsum * csum}`.replace(/0/g, '');
+    return code.padEnd(6, '0');
+}
+
+const safeCode = safe(input)
+console.log(`safe code is: ${safeCode}`)
+
+function grid(input){
+    const grid = Array.from({ length: 128 }, () => Array(8).fill('.'));
+
+    input.forEach(code =>{
+        const row = parseInt(code.slice(0, 7).replace(/F/g, '0').replace(/B/g, '1'), 2);
+        const col = parseInt(code.slice(7).replace(/L/g, '0').replace(/R/g, '1'), 2);
+        grid[row][col] = '#'
+    });
+
+    console.log(grid.map(row => row.join(' ')).join('\n'));
+}
+
+grid(input)
